@@ -15,7 +15,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+        print("git rev-parse HEAD")
+        print("------- 73e532c880d6241c406d88e9e9c2513d22340499")
+        print(" ")
         return true
     }
 

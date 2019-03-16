@@ -42,8 +42,9 @@ class AnimationView: UIView {
         return layer
     }()
     
-    lazy var timer: CADisplayLink = {
-        let timer = CADisplayLink(target: self, selector: #selector(animtionTime))
+    private lazy var timer: WeakTimer = {
+        let timer = WeakTimer(target: self, sel: #selector(animtionTime))
+        timer.timer = CADisplayLink(target: timer, selector: #selector(animtionTime))
         return timer
     }()
     
@@ -59,6 +60,7 @@ class AnimationView: UIView {
         }
     }
     
+    /// 颜色
     var color: UIColor = UIColor.red {
         didSet {
             waveLayer.fillColor = color.cgColor
@@ -68,15 +70,15 @@ class AnimationView: UIView {
     
     override init(frame: CGRect) {
         super.init(frame: frame)
-        bottomTextLabel = createTextLabel()
-        topTextLabel = createTextLabel()
-        layer.addSublayer(waveLayer)
-        layer.addSublayer(bottomTextLayer)
-        layer.addSublayer(topTextLayer)
+        initUI()
     }
     
     required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
+        initUI()
+    }
+    
+    private func initUI() {
         bottomTextLabel = createTextLabel()
         topTextLabel = createTextLabel()
         layer.addSublayer(waveLayer)
@@ -85,7 +87,7 @@ class AnimationView: UIView {
     }
     
     func startAnimation() {
-        timer.add(to: RunLoop.main, forMode: .common)
+        timer.timer?.add(to: RunLoop.main, forMode: .common)
     }
     
     @objc private func animtionTime() {
@@ -141,4 +143,37 @@ extension AnimationView {
         label.text = text
         return label
     }
+}
+
+/// 解决Timer循环引用问题
+class WeakTimer: NSObject {
+    
+    weak var target: NSObjectProtocol?
+    var sel: Selector?
+    var timer: CADisplayLink?
+    
+    init(target: NSObjectProtocol?, sel: Selector?) {
+        self.target = target
+        self.sel = sel
+        super.init()
+        // 加强安全保护
+        guard target?.responds(to: sel) == true else {
+            return
+        }
+        
+        // 将target的selector替换为redirectionMethod，该方法会重新处理事件
+        let method = class_getInstanceMethod(classForCoder, #selector(WeakTimer.redirectionMethod))!
+        class_replaceMethod(classForCoder, sel!, method_getImplementation(method), method_getTypeEncoding(method))
+    }
+    
+    @objc func redirectionMethod() {
+        // 如果target未被释放，则调用target方法，否则释放timer
+        if self.target != nil {
+            self.target!.perform(self.sel)
+        } else {
+            self.timer?.invalidate()
+        }
+    }
+    
+    
 }

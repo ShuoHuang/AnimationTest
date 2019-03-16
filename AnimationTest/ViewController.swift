@@ -20,7 +20,7 @@ class ViewController: UIViewController {
         animView.layer.cornerRadius = 100
         animView.layer.masksToBounds = true
         animView.layer.borderColor = UIColor.lightGray.cgColor
-        animView.layer.borderWidth = 1
+        animView.layer.borderWidth = 0.5
         view.addSubview(animView)
     }
 
@@ -28,7 +28,7 @@ class ViewController: UIViewController {
         super.viewDidAppear(animated)
         animView.startAnimation()
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
             self.animView.text = "RD"
             self.animView.color = UIColor.orange
         }
